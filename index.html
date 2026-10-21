@@ -1,0 +1,15 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>PS5 DOOR</title></head>
+<body style="font:17px/1.5 sans-serif;background:#111;color:#eee;padding:2em">
+<h1 style="color:#4f4">PUBLIC PAGE LOADED</h1>
+<p>This page was fetched by the console's browser. Now handing it to the LAN server.</p>
+<p style="font-size:1.3em">If it does not go automatically, tap this:</p>
+<p><a href="http://192.168.86.53:8080" style="color:#6cf;font-size:1.6em">OPEN LAN PAGE</a></p>
+<pre id="info" style="color:#888"></pre>
+<script>
+var info = "UA: " + navigator.userAgent + "\nWASM: " + (typeof WebAssembly!=="undefined") + "\n";
+document.getElementById("info").textContent = info;
+/* navigate the console itself to the LAN box - the console can reach the LAN directly */
+setTimeout(function(){ try { location.href = "http://192.168.86.53:8080"; } catch(e){} }, 800);
+</script>
+</body></html>
