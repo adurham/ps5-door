@@ -5,61 +5,47 @@
 </head>
 <body style="font:17px/1.5 sans-serif;background:#111;color:#eee;padding:1.2em">
 <h1 style="color:#4f4">PUBLIC PAGE LOADED</h1>
-<p>Finding the LAN server&hellip;</p>
+<p style="font-size:1.3em">Handing the console to the LAN door&hellip;</p>
 <p id="big" style="font-size:2em;font-weight:bold;margin:.6em 0">&nbsp;</p>
 <div id="btns"></div>
 <pre id="info" style="color:#888;font-size:.8em"></pre>
 <script>
-/* The console cannot type a URL, so this page finds the door by itself.
- * Candidates are probed with a 1x1 GIF: onload fires only if a real door answers.
- * Whichever answers first wins and the console is navigated there.
- * Fallback is a list of large tappable buttons - never a URL to type. */
+/* The console has no address bar, so this page must do the navigating itself.
+ *
+ * IMPORTANT: the page is served over https, and an https page may NOT load an http
+ * image or fetch - the browser blocks it as mixed content.  It MAY perform a top-level
+ * navigation to http, which is what the original door page did.  So there is no way to
+ * probe candidates first; we navigate, and the buttons below are the recovery path if
+ * the chosen host is down.
+ *
+ * Keep CAND[0] current: tools/door_publish.sh rewrites this list from the Mac's live
+ * LAN address and pushes, so the page repairs itself when the address changes. */
 var CAND = [
-  'http://192.168.86.224:8080',   /* the Mac door */
+  'http://192.168.86.224:8080',   /* the Mac door (current) */
   'http://192.168.86.53:8080',
   'http://192.168.86.55:8080'
 ];
-var won = null, tries = 0, MAX = 6;
-var big = document.getElementById('big');
+var AUTO = true;                  /* false = show the buttons, do not navigate */
 
 function go(h) {
-  if (won && won !== h) return;
-  won = h;
-  big.textContent = 'OPENING ' + h;
+  document.getElementById('big').textContent = 'OPENING ' + h;
   try { location.href = h + '/?v=' + Date.now(); } catch (e) {}
 }
 
-function fallback() {
-  if (won) return;
-  big.textContent = 'Tap a server:';
-  var d = document.getElementById('btns');
-  for (var i = 0; i < CAND.length; i++) {
-    var a = document.createElement('a');
-    a.href = CAND[i] + '/';
-    a.textContent = CAND[i];
-    a.setAttribute('style', 'display:block;padding:1.1em;margin:.5em 0;background:#0d2a3a;' +
-      'border:2px solid #4aa8d8;border-radius:10px;color:#d8f0ff;font-size:1.4em;' +
-      'font-weight:bold;text-decoration:none');
-    d.appendChild(a);
-  }
+var big = document.getElementById('big');
+var d = document.getElementById('btns');
+for (var i = 0; i < CAND.length; i++) {
+  var a = document.createElement('a');
+  a.href = CAND[i] + '/';
+  a.textContent = CAND[i];
+  a.setAttribute('style', 'display:block;padding:1.1em;margin:.5em 0;background:#0d2a3a;' +
+    'border:2px solid #4aa8d8;border-radius:10px;color:#d8f0ff;font-size:1.4em;' +
+    'font-weight:bold;text-decoration:none');
+  d.appendChild(a);
 }
-
-function probe() {
-  tries++;
-  big.textContent = 'Probing (' + tries + '/' + MAX + ')\u2026';
-  for (var i = 0; i < CAND.length; i++) {
-    (function (h) {
-      var im = new Image(), done = false;
-      im.onload = function () { if (!done) { done = true; go(h); } };
-      im.onerror = function () { done = true; };
-      im.src = h + '/p.gif?i=' + i + '&t=' + Date.now();
-    })(CAND[i]);
-  }
-  setTimeout(function () { if (!won && tries < MAX) probe(); else if (!won) fallback(); }, 2500);
-}
-
 document.getElementById('info').textContent =
   'UA: ' + navigator.userAgent + '\nWASM: ' + (typeof WebAssembly !== 'undefined');
-probe();
+
+if (AUTO) setTimeout(function () { go(CAND[0]); }, 600);
 </script>
 </body></html>
